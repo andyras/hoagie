@@ -1,0 +1,48 @@
+#!/bin/bash
+
+hoagie="hoagie.sh"
+
+function dynamix_sub {
+# set default variables
+if [ ! -z ${EXECUTABLE} ]; then
+ echo "${EXECUTABLE}" >> $hoagie
+else
+fi
+}
+
+while getopts ":p:n:e:kh" optname; do
+ case $optname in
+  p)
+   PROGRAM=$OPTARG
+   ;;
+  n)
+   NCPU=$OPTARG
+   ;;
+  e)
+   EXECUTABLE=$OPTARG
+   ;;
+  k)
+   KEEP_RUNSCRIPT=1
+   ;;
+  h)
+   HELP=1
+ esac
+done
+
+if [ ${HELP} -eq 1 ]; then
+ print_help
+fi
+
+# at this point something will happen, so make the submission script
+if [ -f $hoagie ]; then
+ rm -f $hoagie
+fi
+touch $hoagie
+
+# decide what to run
+if [ ! -z ${PROGRAM} ]; then
+ ${program}_sub
+else
+ # default is dynamix
+ dynamix_sub
+fi
