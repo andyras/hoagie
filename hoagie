@@ -3,10 +3,43 @@
 hoagie="$(pwd)/hoagie.sh"
 HELP=0
 
+# set up PBS environment variables
+function set_environment_vars {
+ echo "#PBS -V" >> $hoagie
+ echo "#PBS -N $(basename $0)" >> $hoagie
+}
+
+# set up log files
+function set_log_files {
+ if [ ! -z ${MAKE_LOGS} ]; then
+  echo "#PBS -o stdout.log" >> $hoagie
+  echo "#PBS -e stderr.log" >> $hoagie
+ else
+  echo "#PBS -o /dev/null" >> $hoagie
+  echo "#PBS -e /dev/null" >> $hoagie
+ fi
+}
+
 # request multiple CPUs
 function request_cpus {
  if [ ! -z ${NCPU} ]; then
   echo "#PBS -l nodes=1:ppn=${NCPU}" >> $hoagie
+ fi
+}
+
+# go to directory from which job was submitted.
+function go_to_working_dir {
+ echo "echo \"going to PBS working directory: \${PBS_O_WORKDIR}\"" >> $hoagie
+ echo "cd \${PBS_O_WORKDIR}" >> $hoagie
+}
+
+# run the script/binary
+function run_program {
+ if [ ! -z ${EXECUTABLE} ]; then
+  echo "./${EXECUTABLE}" >> $hoagie
+ else
+  # run whatever was the argument to this function
+  echo "$1" >> $hoagie
  fi
 }
 
@@ -29,35 +62,21 @@ function submit_job {
 }
 
 function dynamix_sub {
-# set up PBS environment variables
-echo "#PBS -V" >> $hoagie
-echo "#PBS -N $(basename $0)" >> $hoagie
-echo "#PBS -o stdout.log" >> $hoagie
-echo "#PBS -e stderr.log" >> $hoagie
-echo "##PBS -o /dev/null" >> $hoagie
-echo "##PBS -e /dev/null" >> $hoagie
-echo "#PBS -l mem=5gb" >> $hoagie
+set_environment_vars
 
-# go to directory from which job was submitted.
-echo "echo \"going to PBS working directory: \${PBS_O_WORKDIR}\"" >> $hoagie
-echo "cd \${PBS_O_WORKDIR}" >> $hoagie
+set_log_files
 
-# run the script/binary
-if [ ! -z ${EXECUTABLE} ]; then
- echo "${EXECUTABLE}" >> $hoagie
-else
- #echo "./total_dynamix" >> $hoagie
- echo "sleep 10" >> $hoagie
- echo "touch me" >> $hoagie
-fi
+go_to_working_dir
+
+#run_program "./total_dynamix"
+run_program "sleep 10; touch me"
 
 delete_runscript
 
 submit_job
-
 }
 
-while getopts ":p:n:e:dkh" optname; do
+while getopts ":p:n:e:dkhl" optname; do
  case $optname in
   p)
    PROGRAM=$OPTARG
@@ -75,6 +94,9 @@ while getopts ":p:n:e:dkh" optname; do
    ;;
   k)
    KEEP_RUNSCRIPT=1
+   ;;
+  l)
+   MAKE_LOGS=1
    ;;
   h)
    HELP=1
