@@ -1,0 +1,2 @@
+# figure out whether to submit for PBS, SGE, Moab
+ # can guess by hostname for starters
