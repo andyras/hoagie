@@ -29,12 +29,17 @@ function request_cpus {
 
 # go to directory from which job was submitted.
 function go_to_working_dir {
+ echo "" >> $hoagie
+ echo "# going to PBS working directory" >> $hoagie
  echo "echo \"going to PBS working directory: \${PBS_O_WORKDIR}\"" >> $hoagie
  echo "cd \${PBS_O_WORKDIR}" >> $hoagie
 }
 
 # run the script/binary
 function run_program {
+ echo "" >> $hoagie
+ echo "# running program" >> $hoagie
+ echo "echo \"running program\"" >> $hoagie
  if [ ! -z ${EXECUTABLE} ]; then
   echo "./${EXECUTABLE}" >> $hoagie
  else
@@ -48,6 +53,9 @@ function delete_runscript {
  if [ ! -z ${KEEP_RUNSCRIPT} ]; then
   :
  else
+  echo "" >> $hoagie
+  echo "# deleting run script" >> $hoagie
+  echo "echo \"deleting run script\"" >> $hoagie
   echo "rm -f ${hoagie}" >> $hoagie
  fi
 }
