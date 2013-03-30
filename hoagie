@@ -6,6 +6,7 @@ HELP=0
 function dynamix_sub {
 # set up PBS environment variables
 echo "#PBS -V" >> $hoagie
+echo "#PBS -N $0" >> $hoagie
 echo "#PBS -o stdout.log" >> $hoagie
 echo "#PBS -e stderr.log" >> $hoagie
 echo "##PBS -o /dev/null" >> $hoagie
@@ -19,13 +20,21 @@ fi
 # go to directory from which job was submitted.
 echo "echo \"going to PBS working directory: \${PBS_O_WORKDIR}\"" >> $hoagie
 echo "cd \${PBS_O_WORKDIR}" >> $hoagie
-# set default variables
+
+# run the script/binary
 if [ ! -z ${EXECUTABLE} ]; then
  echo "${EXECUTABLE}" >> $hoagie
 else
  #echo "./total_dynamix" >> $hoagie
  echo "sleep 10" >> $hoagie
  echo "touch me" >> $hoagie
+fi
+
+# delete the runscript
+if [ ! -z ${KEEP_RUNSCRIPT} ]; then
+ :
+else
+ echo "rm -f ${hoagie}" >> $hoagie
 fi
 
 # submit the job
