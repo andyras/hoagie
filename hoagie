@@ -1,13 +1,35 @@
 #!/bin/bash
 
-hoagie="hoagie.sh"
+hoagie="$(pwd)/hoagie.sh"
+HELP=0
 
 function dynamix_sub {
+# set up PBS environment variables
+echo "#PBS -V" >> $hoagie
+echo "#PBS -o stdout.log" >> $hoagie
+echo "#PBS -e stderr.log" >> $hoagie
+echo "##PBS -o /dev/null" >> $hoagie
+echo "##PBS -e /dev/null" >> $hoagie
+echo "#PBS -l mem=5gb" >> $hoagie
+# request multiple CPUs
+if [ ! -z ${NCPU} ]; then
+ echo "#PBS -l nodes=1:ppn=${NCPU}" >> $hoagie
+fi
+
+# go to directory from which job was submitted.
+echo "echo \"going to PBS working directory: \${PBS_O_WORKDIR}\"" >> $hoagie
+echo "cd \${PBS_O_WORKDIR}" >> $hoagie
 # set default variables
 if [ ! -z ${EXECUTABLE} ]; then
  echo "${EXECUTABLE}" >> $hoagie
 else
+ #echo "./total_dynamix" >> $hoagie
+ echo "sleep 10" >> $hoagie
+ echo "touch me" >> $hoagie
 fi
+
+# submit the job
+
 }
 
 while getopts ":p:n:e:kh" optname; do
@@ -16,6 +38,7 @@ while getopts ":p:n:e:kh" optname; do
    PROGRAM=$OPTARG
    ;;
   n)
+   echo "requesting ${OPTARG} CPUs"
    NCPU=$OPTARG
    ;;
   e)
