@@ -6,7 +6,7 @@ HELP=0
 function dynamix_sub {
 # set up PBS environment variables
 echo "#PBS -V" >> $hoagie
-echo "#PBS -N $0" >> $hoagie
+echo "#PBS -N $(basename $0)" >> $hoagie
 echo "#PBS -o stdout.log" >> $hoagie
 echo "#PBS -e stderr.log" >> $hoagie
 echo "##PBS -o /dev/null" >> $hoagie
