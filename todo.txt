@@ -1,2 +1,4 @@
 # figure out whether to submit for PBS, SGE, Moab
  # can guess by hostname for starters
+
+# add option not to create log files

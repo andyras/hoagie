@@ -3,6 +3,31 @@
 hoagie="$(pwd)/hoagie.sh"
 HELP=0
 
+# request multiple CPUs
+function request_cpus {
+ if [ ! -z ${NCPU} ]; then
+  echo "#PBS -l nodes=1:ppn=${NCPU}" >> $hoagie
+ fi
+}
+
+# delete the runscript
+function delete_runscript {
+ if [ ! -z ${KEEP_RUNSCRIPT} ]; then
+  :
+ else
+  echo "rm -f ${hoagie}" >> $hoagie
+ fi
+}
+
+# submit the job
+function submit_job {
+ if [ ! -z ${DRY_RUN} ]; then
+  :
+ else
+  qsub $hoagie
+ fi
+}
+
 function dynamix_sub {
 # set up PBS environment variables
 echo "#PBS -V" >> $hoagie
@@ -12,10 +37,6 @@ echo "#PBS -e stderr.log" >> $hoagie
 echo "##PBS -o /dev/null" >> $hoagie
 echo "##PBS -e /dev/null" >> $hoagie
 echo "#PBS -l mem=5gb" >> $hoagie
-# request multiple CPUs
-if [ ! -z ${NCPU} ]; then
- echo "#PBS -l nodes=1:ppn=${NCPU}" >> $hoagie
-fi
 
 # go to directory from which job was submitted.
 echo "echo \"going to PBS working directory: \${PBS_O_WORKDIR}\"" >> $hoagie
@@ -30,18 +51,13 @@ else
  echo "touch me" >> $hoagie
 fi
 
-# delete the runscript
-if [ ! -z ${KEEP_RUNSCRIPT} ]; then
- :
-else
- echo "rm -f ${hoagie}" >> $hoagie
-fi
+delete_runscript
 
-# submit the job
+submit_job
 
 }
 
-while getopts ":p:n:e:kh" optname; do
+while getopts ":p:n:e:dkh" optname; do
  case $optname in
   p)
    PROGRAM=$OPTARG
@@ -52,6 +68,10 @@ while getopts ":p:n:e:kh" optname; do
    ;;
   e)
    EXECUTABLE=$OPTARG
+   ;;
+  d)
+   echo "dry run"
+   DRY_RUN=1
    ;;
   k)
    KEEP_RUNSCRIPT=1
