@@ -3,6 +3,23 @@
 hoagie="$(pwd)/hoagie.sh"
 HELP=0
 
+function print_help {
+ echo "
+ hoagie is a script to submit jobs to clusters (so far tim).
+
+ Usage: hoagie -p PROGRAM -n NCPU -e COMMAND -d -k -h -l
+ -p: specify program to be run
+ -n: specify number of CPUs
+ -e: specify executable or command to be run by job
+ -d: dry run (don't submit job)
+ -k: keep auto-generated hoagie.sh after job is done
+ -h: print this help
+ -l: make log files for stderr and stdout
+ "
+
+ exit
+}
+
 # set up PBS environment variables
 function set_environment_vars {
  echo "#PBS -V" >> $hoagie
@@ -40,8 +57,8 @@ function run_program {
  echo "" >> $hoagie
  echo "# running program" >> $hoagie
  echo "echo \"running program\"" >> $hoagie
- if [ ! -z ${EXECUTABLE} ]; then
-  echo "./${EXECUTABLE}" >> $hoagie
+ if [ ! -z "${EXECUTABLE}" ]; then
+  echo "${EXECUTABLE}" >> $hoagie
  else
   # run whatever was the argument to this function
   echo "$1" >> $hoagie
@@ -73,8 +90,9 @@ function dynamix_sub {
 set_environment_vars
 set_log_files
 go_to_working_dir
-#run_program "./total_dynamix"
-run_program "sleep 10; touch me"
+run_program "./total_dynamix"
+#run_program "sleep 10; touch me"
+delete_runscript
 submit_job
 }
 
