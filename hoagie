@@ -89,6 +89,7 @@ function submit_job {
 function dynamix_sub {
 set_environment_vars
 set_log_files
+request_cpus
 go_to_working_dir
 run_program "./total_dynamix"
 #run_program "sleep 10; touch me"
