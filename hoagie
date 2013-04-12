@@ -1,6 +1,6 @@
 #!/bin/bash
 
-hoagie="$(pwd)/hoagie.sh"
+hoagie="${PWD}/hoagie.sh"
 HELP=0
 
 function print_help {
@@ -20,14 +20,22 @@ function print_help {
  exit
 }
 
+# set up SGE environment variables
+function set_sge_environment_vars {
+ echo "#$ -S /bin/bash" >> $hoagie
+ echo "#$ -cwd" >> $hoagie
+ echo "#$ -V" >> $hoagie
+ echo "#$ -N $(basename $0)" >> $hoagie
+}
+
 # set up PBS environment variables
-function set_environment_vars {
+function set_pbs_environment_vars {
  echo "#PBS -V" >> $hoagie
  echo "#PBS -N $(basename $0)" >> $hoagie
 }
 
 # set up log files
-function set_log_files {
+function pbs_set_log_files {
  if [ ! -z ${MAKE_LOGS} ]; then
   echo "#PBS -o stdout.log" >> $hoagie
   echo "#PBS -e stderr.log" >> $hoagie
@@ -37,19 +45,57 @@ function set_log_files {
  fi
 }
 
+# set up log files
+function sge_set_log_files {
+ if [ ! -z ${MAKE_LOGS} ]; then
+  echo "#$ -o stdout.log" >> $hoagie
+  echo "#$ -e stderr.log" >> $hoagie
+ else
+  echo "#$ -o /dev/null" >> $hoagie
+  echo "#$ -e /dev/null" >> $hoagie
+ fi
+}
+
 # request multiple CPUs
-function request_cpus {
+function sge_request_cpus {
+ if [ ! -z ${NCPU} ]; then
+  echo "#$ -l nodes=1:ppn=${NCPU}" >> $hoagie
+ fi
+}
+
+# request multiple CPUs
+function pbs_request_cpus {
  if [ ! -z ${NCPU} ]; then
   echo "#PBS -l nodes=1:ppn=${NCPU}" >> $hoagie
  fi
 }
 
+# create scratch directory
+function sge_create_scratch_dir {
+ echo "" >> $hoagie
+ echo "# create scratch directory" >> $hoagie
+ echo "echo \"create scratch directory\"" >> $hoagie
+ echo "SCRATCH_JOB_DIR=\${TMPDIR}/\$(basename \${SGE_CWD_PATH})" >> $hoagie
+ echo "cp -rf \${SGE_CWD_PATH} \${SCRATCH_JOB_DIR}" >> $hoagie
+ if [ ! -z ${MAKE_LOGS} ]; then
+  echo "rm -f \${SCRATCH_JOB_DIR}/std{err,out}.log" >> $hoagie
+ fi
+}
+
 # go to directory from which job was submitted.
-function go_to_working_dir {
+function pbs_go_to_working_dir {
  echo "" >> $hoagie
  echo "# going to PBS working directory" >> $hoagie
  echo "echo \"going to PBS working directory: \${PBS_O_WORKDIR}\"" >> $hoagie
  echo "cd \${PBS_O_WORKDIR}" >> $hoagie
+}
+
+# go to directory from which job was submitted.
+function sge_go_to_working_dir {
+ echo "" >> $hoagie
+ echo "# going to SGE working directory" >> $hoagie
+ echo "echo \"going to SGE working directory: \${SCRATCH_JOB_DIR}\"" >> $hoagie
+ echo "cd \${SCRATCH_JOB_DIR}" >> $hoagie
 }
 
 # run the script/binary
@@ -63,6 +109,15 @@ function run_program {
   # run whatever was the argument to this function
   echo "$1" >> $hoagie
  fi
+}
+
+# copy the job from scratch back to the original directory
+function sge_copy_back_scratch {
+ echo "" >> $hoagie
+ echo "# copy job dir contents back to where they started" >> $hoagie
+ echo "echo \"copying from scratch to original directory\"" >> $hoagie
+ echo "cp -rf \${SCRATCH_JOB_DIR}/* \${SGE_CWD_PATH}/" >> $hoagie
+ echo "cd \$SGE_CWD_PATH" >> $hoagie
 }
 
 # delete the runscript
@@ -86,11 +141,24 @@ function submit_job {
  fi
 }
 
-function dynamix_sub {
-set_environment_vars
-set_log_files
-request_cpus
-go_to_working_dir
+function dynamix_sub_ra {
+set_sge_environment_vars
+sge_set_log_files
+sge_request_cpus
+sge_create_scratch_dir
+sge_go_to_working_dir
+#run_program "./total_dynamix"
+run_program "sleep 5; touch me"
+sge_copy_back_scratch
+delete_runscript
+submit_job
+}
+
+function dynamix_sub_tim {
+set_pbs_environment_vars
+pbs_set_log_files
+pbs_request_cpus
+pbs_go_to_working_dir
 run_program "./total_dynamix"
 #run_program "sleep 10; touch me"
 delete_runscript
@@ -128,6 +196,18 @@ if [ ${HELP} -eq 1 ]; then
  print_help
 fi
 
+echo $HOSTNAME
+if [ $HOSTNAME == "radon.theory.northwestern.edu" ]; then
+ echo "host is radon"
+ host=ra
+elif [ $HOSTNAME == "tim.selfip.org" ]; then
+ echo "host is tim"
+ host=tim
+else
+ print_help
+fi
+echo "no bugs here"
+
 # at this point something will happen, so make the submission script
 if [ -f $hoagie ]; then
  rm -f $hoagie
@@ -135,9 +215,10 @@ fi
 touch $hoagie
 
 # decide what to run
-if [ ! -z ${PROGRAM} ]; then
- ${program}_sub
-else
- # default is dynamix
- dynamix_sub
+echo program is \'$PROGRAM\'
+if [ -z ${PROGRAM} ]; then
+ PROGRAM=dynamix
 fi
+
+echo "running ${PROGRAM}_sub_${host}"
+${PROGRAM}_sub_${host}
