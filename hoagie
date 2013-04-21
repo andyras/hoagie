@@ -59,7 +59,7 @@ function sge_set_log_files {
 # request multiple CPUs
 function sge_request_cpus {
  if [ ! -z ${NCPU} ]; then
-  echo "#$ -l nodes=1:ppn=${NCPU}" >> $hoagie
+  echo "#$ -pe mpi ${NCPU}" >> $hoagie
  fi
 }
 
