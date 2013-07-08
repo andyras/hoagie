@@ -26,12 +26,18 @@ function set_sge_environment_vars {
  echo "#$ -cwd" >> $hoagie
  echo "#$ -V" >> $hoagie
  echo "#$ -N $(basename $0)" >> $hoagie
+ if [ ! -z ${EMAIL} ]; then
+  echo "#$ -m bae -M andyras@gmail.com" >> $hoagie
+ fi
 }
 
 # set up PBS environment variables
 function set_pbs_environment_vars {
  echo "#PBS -V" >> $hoagie
  echo "#PBS -N $(basename $0)" >> $hoagie
+ if [ ! -z ${EMAIL} ]; then
+  echo "#PBS -m bae -M andyras@gmail.com" >> $hoagie
+ fi
 }
 
 # set up log files
@@ -159,13 +165,13 @@ set_pbs_environment_vars
 pbs_set_log_files
 pbs_request_cpus
 pbs_go_to_working_dir
-run_program "./total_dynamix"
-#run_program "sleep 10; touch me"
+#run_program "./total_dynamix"
+run_program "sleep 5; touch me"
 delete_runscript
 submit_job
 }
 
-while getopts ":p:n:e:dkhl" optname; do
+while getopts ":p:n:e:dklmhv" optname; do
  case $optname in
   p)
    PROGRAM=$OPTARG
@@ -187,6 +193,12 @@ while getopts ":p:n:e:dkhl" optname; do
   l)
    MAKE_LOGS=1
    ;;
+  m)
+   EMAIL=1
+   ;;
+  v)
+   VERBOSE=1
+   ;;
   h)
    HELP=1
  esac
@@ -196,17 +208,22 @@ if [ ${HELP} -eq 1 ]; then
  print_help
 fi
 
-echo $HOSTNAME
+if [ ! -z ${VERBOSE} ]; then
+ echo $HOSTNAME
+fi
 if [ $HOSTNAME == "radon.theory.northwestern.edu" ]; then
- echo "host is radon"
+ if [ ! -z ${VERBOSE} ]; then
+  echo "host is radon"
+ fi
  host=ra
 elif [ $HOSTNAME == "tim.selfip.org" ]; then
- echo "host is tim"
+ if [ ! -z ${VERBOSE} ]; then
+  echo "host is tim"
+ fi
  host=tim
 else
  print_help
 fi
-echo "no bugs here"
 
 # at this point something will happen, so make the submission script
 if [ -f $hoagie ]; then
@@ -215,10 +232,14 @@ fi
 touch $hoagie
 
 # decide what to run
-echo program is \'$PROGRAM\'
+if [ ! -z ${VERBOSE} ]; then
+ echo "program is '${PROGRAM}'"
+fi
 if [ -z ${PROGRAM} ]; then
  PROGRAM=dynamix
 fi
 
-echo "running ${PROGRAM}_sub_${host}"
+if [ ! -z ${VERBOSE} ]; then
+ echo "running ${PROGRAM}_sub_${host}"
+fi
 ${PROGRAM}_sub_${host}
