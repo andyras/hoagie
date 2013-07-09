@@ -101,7 +101,7 @@ function sge_set_log_files {
 # request multiple CPUs
 function sge_request_cpus {
  if [ ! -z ${NCPU} ]; then
-  echo "#$ -pe mpi ${NCPU}" >> $hoagie
+  echo "#$ -pe ortePE ${NCPU}" >> $hoagie
  fi
 }
 
@@ -205,8 +205,8 @@ sge_set_log_files
 sge_request_cpus
 sge_create_scratch_dir
 sge_go_to_working_dir
-#run_program "./total_dynamix"
 run_program "sleep 5; touch me"
+#run_program "./total_dynamix"
 sge_copy_back_scratch
 delete_runscript
 qsub_job
@@ -217,8 +217,8 @@ set_pbs_environment_vars
 pbs_set_log_files
 pbs_request_cpus
 pbs_go_to_working_dir
-#run_program "./total_dynamix"
 run_program "sleep 5; touch me"
+#run_program "./total_dynamix"
 delete_runscript
 qsub_job
 }
@@ -231,8 +231,8 @@ if [ ! -z ${SEIDEMAN_NODE} ]; then
  moab_quest_seideman_node
 fi
 pbs_go_to_working_dir
-#run_program "./total_dynamix"
 run_program "sleep 5; touch me"
+#run_program "./total_dynamix"
 delete_runscript
 msub_job
 }
