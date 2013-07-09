@@ -5,23 +5,35 @@ HELP=0
 
 function print_help {
  echo "
- hoagie is a script to submit jobs to clusters (so far tim).
+ hoagie is a script to submit jobs to clusters (so far tim, radon and quest).
 
- Usage: hoagie -p PROGRAM -n NCPU -e COMMAND -d -k -h -l
+ Usage: hoagie -p PROGRAM -n NCPU -e COMMAND -d -k -l -m -s -h -v
  -p: specify program to be run
  -n: specify number of CPUs
  -e: specify executable or command to be run by job
  -d: dry run (don't submit job)
  -k: keep auto-generated hoagie.sh after job is done
- -h: print this help
  -l: make log files for stderr and stdout
+ -m: send e-mail at beginning, end, or abortion of job
+ -s: request Seideman node (quest only)
+ -h: print this help
+ -v: verbose output
  "
 
  exit
 }
 
+# request Seideman node on quest
+function moab_quest_seideman_node {
+ echo "#MSUB -l advres=b1010" >> $hoagie
+ echo "#MSUB -A b1010" >> $hoagie
+ echo "#MSUB -q buyin" >> $hoagie
+ echo "#MSUB -l walltime=7:00:00:00" >> $hoagie
+}
+
 # set up SGE environment variables
 function set_sge_environment_vars {
+ echo "#!/bin/bash" >> $hoagie
  echo "#$ -S /bin/bash" >> $hoagie
  echo "#$ -cwd" >> $hoagie
  echo "#$ -V" >> $hoagie
@@ -33,10 +45,23 @@ function set_sge_environment_vars {
 
 # set up PBS environment variables
 function set_pbs_environment_vars {
+ echo "#!/bin/bash" >> $hoagie
+ echo "#PBS -S /bin/bash" >> $hoagie
  echo "#PBS -V" >> $hoagie
  echo "#PBS -N $(basename $0)" >> $hoagie
  if [ ! -z ${EMAIL} ]; then
   echo "#PBS -m bae -M andyras@gmail.com" >> $hoagie
+ fi
+}
+
+# set up moab environment variables
+function set_moab_environment_vars {
+ echo "#!/bin/bash" >> $hoagie
+ echo "#MSUB -S /bin/bash" >> $hoagie
+ echo "#MSUB -V" >> $hoagie
+ echo "#MSUB -N $(basename $0)" >> $hoagie
+ if [ ! -z ${EMAIL} ]; then
+  echo "#MSUB -m bae -M andyras@gmail.com" >> $hoagie
  fi
 }
 
@@ -48,6 +73,17 @@ function pbs_set_log_files {
  else
   echo "#PBS -o /dev/null" >> $hoagie
   echo "#PBS -e /dev/null" >> $hoagie
+ fi
+}
+
+# set up log files
+function moab_set_log_files {
+ if [ ! -z ${MAKE_LOGS} ]; then
+  echo "#MSUB -o stdout.log" >> $hoagie
+  echo "#MSUB -e stderr.log" >> $hoagie
+ else
+  echo "#MSUB -o /dev/null" >> $hoagie
+  echo "#MSUB -e /dev/null" >> $hoagie
  fi
 }
 
@@ -73,6 +109,13 @@ function sge_request_cpus {
 function pbs_request_cpus {
  if [ ! -z ${NCPU} ]; then
   echo "#PBS -l nodes=1:ppn=${NCPU}" >> $hoagie
+ fi
+}
+
+# request multiple CPUs
+function moab_request_cpus {
+ if [ ! -z ${NCPU} ]; then
+  echo "#MSUB -l nodes=1:ppn=${NCPU}" >> $hoagie
  fi
 }
 
@@ -139,11 +182,20 @@ function delete_runscript {
 }
 
 # submit the job
-function submit_job {
+function qsub_job {
  if [ ! -z ${DRY_RUN} ]; then
   :
  else
   qsub $hoagie
+ fi
+}
+
+# submit the job
+function msub_job {
+ if [ ! -z ${DRY_RUN} ]; then
+  :
+ else
+  msub $hoagie
  fi
 }
 
@@ -157,7 +209,7 @@ sge_go_to_working_dir
 run_program "sleep 5; touch me"
 sge_copy_back_scratch
 delete_runscript
-submit_job
+qsub_job
 }
 
 function dynamix_sub_tim {
@@ -168,10 +220,24 @@ pbs_go_to_working_dir
 #run_program "./total_dynamix"
 run_program "sleep 5; touch me"
 delete_runscript
-submit_job
+qsub_job
 }
 
-while getopts ":p:n:e:dklmhv" optname; do
+function dynamix_sub_quest {
+set_moab_environment_vars
+moab_set_log_files
+moab_request_cpus
+if [ ! -z ${SEIDEMAN_NODE} ]; then
+ moab_quest_seideman_node
+fi
+pbs_go_to_working_dir
+#run_program "./total_dynamix"
+run_program "sleep 5; touch me"
+delete_runscript
+msub_job
+}
+
+while getopts ":p:n:e:dklmshv" optname; do
  case $optname in
   p)
    PROGRAM=$OPTARG
@@ -196,6 +262,9 @@ while getopts ":p:n:e:dklmhv" optname; do
   m)
    EMAIL=1
    ;;
+  s)
+   SEIDEMAN_NODE=1
+   ;;
   v)
    VERBOSE=1
    ;;
@@ -208,20 +277,28 @@ if [ ${HELP} -eq 1 ]; then
  print_help
 fi
 
-if [ ! -z ${VERBOSE} ]; then
- echo $HOSTNAME
-fi
-if [ $HOSTNAME == "radon.theory.northwestern.edu" ]; then
+if [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
  if [ ! -z ${VERBOSE} ]; then
   echo "host is radon"
  fi
  host=ra
-elif [ $HOSTNAME == "tim.selfip.org" ]; then
+elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
  if [ ! -z ${VERBOSE} ]; then
   echo "host is tim"
  fi
  host=tim
+elif [[ ${HOSTNAME} =~ quser* ]]; then
+ host=quest
+ if [ ! -z ${VERBOSE} ]; then
+  echo "host is quest"
+ fi
 else
+ if [ ! -z ${VERBOSE} ]; then
+  echo "host is $HOSTNAME"
+ fi
+ echo ""
+ echo "ERROR: The host is not one of the recognized hosts."
+ echo ""
  print_help
 fi
 
