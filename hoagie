@@ -37,7 +37,7 @@ function set_sge_environment_vars {
  echo "#$ -S /bin/bash" >> $hoagie
  echo "#$ -cwd" >> $hoagie
  echo "#$ -V" >> $hoagie
- echo "#$ -N $(basename $0)" >> $hoagie
+ echo "#$ -N $(basename $0)_$(basename $(pwd))" >> $hoagie
  if [ ! -z ${EMAIL} ]; then
   echo "#$ -m bae -M andyras@gmail.com" >> $hoagie
  fi
@@ -48,7 +48,7 @@ function set_pbs_environment_vars {
  echo "#!/bin/bash" >> $hoagie
  echo "#PBS -S /bin/bash" >> $hoagie
  echo "#PBS -V" >> $hoagie
- echo "#PBS -N $(basename $0)" >> $hoagie
+ echo "#PBS -N $(basename $0)_$(basename $(pwd))" >> $hoagie
  if [ ! -z ${EMAIL} ]; then
   echo "#PBS -m bae -M andyras@gmail.com" >> $hoagie
  fi
@@ -59,7 +59,7 @@ function set_moab_environment_vars {
  echo "#!/bin/bash" >> $hoagie
  echo "#MSUB -S /bin/bash" >> $hoagie
  echo "#MSUB -V" >> $hoagie
- echo "#MSUB -N $(basename $0)" >> $hoagie
+ echo "#MSUB -N $(basename $0)_$(basename $(pwd))" >> $hoagie
  if [ ! -z ${EMAIL} ]; then
   echo "#MSUB -m bae -M andyras@gmail.com" >> $hoagie
  fi
