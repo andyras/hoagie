@@ -28,7 +28,7 @@ function moab_quest_seideman_node {
  echo "#MSUB -l advres=b1010" >> $hoagie
  echo "#MSUB -A b1010" >> $hoagie
  echo "#MSUB -q buyin" >> $hoagie
- echo "#MSUB -l walltime=7:00:00:00" >> $hoagie
+ echo "#MSUB -l walltime=99:00:00:00" >> $hoagie
 }
 
 # set up SGE environment variables
