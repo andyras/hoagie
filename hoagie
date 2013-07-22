@@ -4,319 +4,322 @@ hoagie="${PWD}/hoagie.sh"
 HELP=0
 
 function print_help {
- echo "
- hoagie is a script to submit jobs to clusters (so far tim, radon and quest).
-
- Usage: hoagie -p PROGRAM -n NCPU -e COMMAND -d -k -l -m -s -h -v
- -p: specify program to be run
- -n: specify number of CPUs
- -e: specify executable or command to be run by job
- -d: dry run (don't submit job)
- -k: keep auto-generated hoagie.sh after job is done
- -l: make log files for stderr and stdout
- -m: send e-mail at beginning, end, or abortion of job
- -s: request Seideman node (quest only)
- -h: print this help
- -v: verbose output
- "
-
- exit
+  echo "
+  hoagie is a script to submit jobs to clusters (so far tim, radon and quest).
+  
+  Usage: hoagie -p PROGRAM -n NCPU -e COMMAND -d -k -l -m -s -h -v
+  -p: specify program to be run
+  -n: specify number of CPUs
+  -e: specify executable or command to be run by job
+  -d: dry run (don't submit job)
+  -k: keep auto-generated hoagie.sh after job is done
+  -l: make log files for stderr and stdout
+  -m: send e-mail at beginning, end, or abortion of job
+  -s: request Seideman node (quest only)
+  -h: print this help
+  -v: verbose output
+  "
+  
+  exit
 }
 
 # request Seideman node on quest
 function moab_quest_seideman_node {
- echo "#MSUB -l advres=b1010" >> $hoagie
- echo "#MSUB -A b1010" >> $hoagie
- echo "#MSUB -q buyin" >> $hoagie
- echo "#MSUB -l walltime=99:00:00:00" >> $hoagie
+  echo "#MSUB -l advres=b1010" >> $hoagie
+  echo "#MSUB -A b1010" >> $hoagie
+  echo "#MSUB -q buyin" >> $hoagie
+  echo "#MSUB -l walltime=99:00:00:00" >> $hoagie
 }
 
 # set up SGE environment variables
 function set_sge_environment_vars {
- echo "#!/bin/bash" >> $hoagie
- echo "#$ -S /bin/bash" >> $hoagie
- echo "#$ -cwd" >> $hoagie
- echo "#$ -V" >> $hoagie
- echo "#$ -N $(basename $0)_$(basename $(pwd))" >> $hoagie
- if [ ! -z ${EMAIL} ]; then
-  echo "#$ -m bae -M andyras@gmail.com" >> $hoagie
- fi
+  echo "#!/bin/bash" >> $hoagie
+  echo "#$ -S /bin/bash" >> $hoagie
+  echo "#$ -cwd" >> $hoagie
+  echo "#$ -V" >> $hoagie
+  echo "#$ -N $(basename $0)_$(basename $(pwd))" >> $hoagie
+  if [ ! -z ${EMAIL} ]; then
+    echo "#$ -m bae -M andyras@gmail.com" >> $hoagie
+  fi
 }
 
 # set up PBS environment variables
 function set_pbs_environment_vars {
- echo "#!/bin/bash" >> $hoagie
- echo "#PBS -S /bin/bash" >> $hoagie
- echo "#PBS -V" >> $hoagie
- echo "#PBS -N $(basename $0)_$(basename $(pwd))" >> $hoagie
- if [ ! -z ${EMAIL} ]; then
-  echo "#PBS -m bae -M andyras@gmail.com" >> $hoagie
- fi
+  echo "#!/bin/bash" >> $hoagie
+  echo "#PBS -S /bin/bash" >> $hoagie
+  echo "#PBS -V" >> $hoagie
+  echo "#PBS -N $(basename $0)_$(basename $(pwd))" >> $hoagie
+  if [ ! -z ${EMAIL} ]; then
+    echo "#PBS -m bae -M andyras@gmail.com" >> $hoagie
+  fi
 }
 
 # set up moab environment variables
 function set_moab_environment_vars {
- echo "#!/bin/bash" >> $hoagie
- echo "#MSUB -S /bin/bash" >> $hoagie
- echo "#MSUB -V" >> $hoagie
- echo "#MSUB -N $(basename $0)_$(basename $(pwd))" >> $hoagie
- if [ ! -z ${EMAIL} ]; then
-  echo "#MSUB -m bae -M andyras@gmail.com" >> $hoagie
- fi
+  echo "#!/bin/bash" >> $hoagie
+  echo "#MSUB -S /bin/bash" >> $hoagie
+  echo "#MSUB -V" >> $hoagie
+  echo "#MSUB -N $(basename $0)_$(basename $(pwd))" >> $hoagie
+  if [ ! -z ${EMAIL} ]; then
+    echo "#MSUB -m bae -M andyras@gmail.com" >> $hoagie
+  fi
 }
 
 # set up log files
 function pbs_set_log_files {
- if [ ! -z ${MAKE_LOGS} ]; then
-  echo "#PBS -o stdout.log" >> $hoagie
-  echo "#PBS -e stderr.log" >> $hoagie
- else
-  echo "#PBS -o /dev/null" >> $hoagie
-  echo "#PBS -e /dev/null" >> $hoagie
- fi
+  if [ ! -z ${MAKE_LOGS} ]; then
+    echo "#PBS -o stdout.log" >> $hoagie
+    echo "#PBS -e stderr.log" >> $hoagie
+  else
+    echo "#PBS -o /dev/null" >> $hoagie
+    echo "#PBS -e /dev/null" >> $hoagie
+  fi
 }
 
 # set up log files
 function moab_set_log_files {
- if [ ! -z ${MAKE_LOGS} ]; then
-  echo "#MSUB -o stdout.log" >> $hoagie
-  echo "#MSUB -e stderr.log" >> $hoagie
- else
-  echo "#MSUB -o /dev/null" >> $hoagie
-  echo "#MSUB -e /dev/null" >> $hoagie
- fi
+  if [ ! -z ${MAKE_LOGS} ]; then
+    echo "#MSUB -o stdout.log" >> $hoagie
+    echo "#MSUB -e stderr.log" >> $hoagie
+  else
+    echo "#MSUB -o /dev/null" >> $hoagie
+    echo "#MSUB -e /dev/null" >> $hoagie
+  fi
 }
 
 # set up log files
 function sge_set_log_files {
- if [ ! -z ${MAKE_LOGS} ]; then
-  echo "#$ -o stdout.log" >> $hoagie
-  echo "#$ -e stderr.log" >> $hoagie
- else
-  echo "#$ -o /dev/null" >> $hoagie
-  echo "#$ -e /dev/null" >> $hoagie
- fi
+  if [ ! -z ${MAKE_LOGS} ]; then
+    echo "#$ -o stdout.log" >> $hoagie
+    echo "#$ -e stderr.log" >> $hoagie
+  else
+    echo "#$ -o /dev/null" >> $hoagie
+    echo "#$ -e /dev/null" >> $hoagie
+  fi
 }
 
 # request multiple CPUs
 function sge_request_cpus {
- if [ ! -z ${NCPU} ]; then
-  echo "#$ -pe ortePE ${NCPU}" >> $hoagie
- fi
+  if [ ! -z ${NCPU} ]; then
+    echo "#$ -pe ortePE ${NCPU}" >> $hoagie
+  fi
 }
 
 # request multiple CPUs
 function pbs_request_cpus {
- if [ ! -z ${NCPU} ]; then
-  echo "#PBS -l nodes=1:ppn=${NCPU}" >> $hoagie
- fi
+  if [ ! -z ${NCPU} ]; then
+    echo "#PBS -l nodes=1:ppn=${NCPU}" >> $hoagie
+  fi
 }
 
 # request multiple CPUs
 function moab_request_cpus {
- if [ ! -z ${NCPU} ]; then
-  echo "#MSUB -l nodes=1:ppn=${NCPU}" >> $hoagie
- fi
+  if [ ! -z ${NCPU} ]; then
+    echo "#MSUB -l nodes=1:ppn=${NCPU}" >> $hoagie
+  fi
 }
 
 # create scratch directory
 function sge_create_scratch_dir {
- echo "" >> $hoagie
- echo "# create scratch directory" >> $hoagie
- echo "echo \"create scratch directory\"" >> $hoagie
- echo "SCRATCH_JOB_DIR=\${TMPDIR}/\$(basename \${SGE_CWD_PATH})" >> $hoagie
- echo "cp -rf \${SGE_CWD_PATH} \${SCRATCH_JOB_DIR}" >> $hoagie
- if [ ! -z ${MAKE_LOGS} ]; then
-  echo "rm -f \${SCRATCH_JOB_DIR}/std{err,out}.log" >> $hoagie
- fi
+  echo "" >> $hoagie
+  echo "# create scratch directory" >> $hoagie
+  echo "echo \"create scratch directory\"" >> $hoagie
+  echo "SCRATCH_JOB_DIR=\${TMPDIR}/\$(basename \${SGE_CWD_PATH})" >> $hoagie
+  echo "cp -rf \${SGE_CWD_PATH} \${SCRATCH_JOB_DIR}" >> $hoagie
+  if [ ! -z ${MAKE_LOGS} ]; then
+    echo "rm -f \${SCRATCH_JOB_DIR}/std{err,out}.log" >> $hoagie
+  fi
 }
 
 # go to directory from which job was submitted.
 function pbs_go_to_working_dir {
- echo "" >> $hoagie
- echo "# going to PBS working directory" >> $hoagie
- echo "echo \"going to PBS working directory: \${PBS_O_WORKDIR}\"" >> $hoagie
- echo "cd \${PBS_O_WORKDIR}" >> $hoagie
+  echo "" >> $hoagie
+  echo "# going to PBS working directory" >> $hoagie
+  echo "echo \"going to PBS working directory: \${PBS_O_WORKDIR}\"" >> $hoagie
+  echo "cd \${PBS_O_WORKDIR}" >> $hoagie
 }
 
 # go to directory from which job was submitted.
 function sge_go_to_working_dir {
- echo "" >> $hoagie
- echo "# going to SGE working directory" >> $hoagie
- echo "echo \"going to SGE working directory: \${SCRATCH_JOB_DIR}\"" >> $hoagie
- echo "cd \${SCRATCH_JOB_DIR}" >> $hoagie
+  echo "" >> $hoagie
+  echo "# going to SGE working directory" >> $hoagie
+  echo "echo \"going to SGE working directory: \${SCRATCH_JOB_DIR}\"" >> $hoagie
+  echo "cd \${SCRATCH_JOB_DIR}" >> $hoagie
 }
 
 # run the script/binary
 function run_program {
- echo "" >> $hoagie
- echo "# running program" >> $hoagie
- echo "echo \"running program\"" >> $hoagie
- if [ ! -z "${EXECUTABLE}" ]; then
-  echo "${EXECUTABLE}" >> $hoagie
- else
-  # run whatever was the argument to this function
-  echo "$1" >> $hoagie
- fi
+  echo "" >> $hoagie
+  echo "# running program" >> $hoagie
+  echo "echo \"running program\"" >> $hoagie
+  if [ ! -z "${EXECUTABLE}" ]; then
+    echo "${EXECUTABLE}" >> $hoagie
+  else
+    # run whatever was the argument to this function
+    echo "$1" >> $hoagie
+  fi
 }
 
 # copy the job from scratch back to the original directory
 function sge_copy_back_scratch {
- echo "" >> $hoagie
- echo "# copy job dir contents back to where they started" >> $hoagie
- echo "echo \"copying from scratch to original directory\"" >> $hoagie
- echo "cp -rf \${SCRATCH_JOB_DIR}/* \${SGE_CWD_PATH}/" >> $hoagie
- echo "cd \$SGE_CWD_PATH" >> $hoagie
+  echo "" >> $hoagie
+  echo "# copy job dir contents back to where they started" >> $hoagie
+  echo "echo \"copying from scratch to original directory\"" >> $hoagie
+  echo "cp -rf \${SCRATCH_JOB_DIR}/* \${SGE_CWD_PATH}/" >> $hoagie
+  echo "cd \$SGE_CWD_PATH" >> $hoagie
 }
 
 # delete the runscript
 function delete_runscript {
- if [ ! -z ${KEEP_RUNSCRIPT} ]; then
-  :
- else
-  echo "" >> $hoagie
-  echo "# deleting run script" >> $hoagie
-  echo "echo \"deleting run script\"" >> $hoagie
-  echo "rm -f ${hoagie}" >> $hoagie
- fi
+  if [ ! -z ${KEEP_RUNSCRIPT} ]; then
+    :
+  else
+    echo "" >> $hoagie
+    echo "# deleting run script" >> $hoagie
+    echo "echo \"deleting run script\"" >> $hoagie
+    echo "rm -f ${hoagie}" >> $hoagie
+  fi
 }
 
 # submit the job
 function qsub_job {
- if [ ! -z ${DRY_RUN} ]; then
-  :
- else
-  qsub $hoagie
- fi
+  if [ ! -z ${DRY_RUN} ]; then
+    :
+  else
+    qsub $hoagie
+  fi
 }
 
 # submit the job
 function msub_job {
- if [ ! -z ${DRY_RUN} ]; then
-  :
- else
-  msub $hoagie
- fi
+  if [ ! -z ${DRY_RUN} ]; then
+    :
+  else
+    msub $hoagie
+  fi
 }
 
 function dynamix_sub_ra {
-set_sge_environment_vars
-sge_set_log_files
-sge_request_cpus
-sge_create_scratch_dir
-sge_go_to_working_dir
-run_program "sleep 5; touch me"
-#run_program "./total_dynamix"
-sge_copy_back_scratch
-delete_runscript
-qsub_job
+  set_sge_environment_vars
+  sge_set_log_files
+  sge_request_cpus
+  sge_create_scratch_dir
+  sge_go_to_working_dir
+  run_program "sleep 5; touch me"
+  #run_program "./total_dynamix"
+  sge_copy_back_scratch
+  delete_runscript
+  qsub_job
 }
 
 function dynamix_sub_tim {
-set_pbs_environment_vars
-pbs_set_log_files
-pbs_request_cpus
-pbs_go_to_working_dir
-run_program "sleep 5; touch me"
-#run_program "./total_dynamix"
-delete_runscript
-qsub_job
+  set_pbs_environment_vars
+  pbs_set_log_files
+  pbs_request_cpus
+  pbs_go_to_working_dir
+  run_program "sleep 5; touch me"
+  #run_program "./total_dynamix"
+  delete_runscript
+  qsub_job
 }
 
 function dynamix_sub_quest {
-set_moab_environment_vars
-moab_set_log_files
-moab_request_cpus
-if [ ! -z ${SEIDEMAN_NODE} ]; then
- moab_quest_seideman_node
-fi
-pbs_go_to_working_dir
-run_program "sleep 5; touch me"
-#run_program "./total_dynamix"
-delete_runscript
-msub_job
+  set_moab_environment_vars
+  moab_set_log_files
+  moab_request_cpus
+  if [ ! -z ${SEIDEMAN_NODE} ]; then
+    moab_quest_seideman_node
+  fi
+  pbs_go_to_working_dir
+  run_program "sleep 5; touch me"
+  #run_program "./total_dynamix"
+  delete_runscript
+  msub_job
 }
 
 while getopts ":p:n:e:dklmshv" optname; do
- case $optname in
-  p)
-   PROGRAM=$OPTARG
-   ;;
-  n)
-   echo "requesting ${OPTARG} CPUs"
-   NCPU=$OPTARG
-   ;;
-  e)
-   EXECUTABLE=$OPTARG
-   ;;
-  d)
-   echo "dry run"
-   DRY_RUN=1
-   ;;
-  k)
-   KEEP_RUNSCRIPT=1
-   ;;
-  l)
-   MAKE_LOGS=1
-   ;;
-  m)
-   EMAIL=1
-   ;;
-  s)
-   SEIDEMAN_NODE=1
-   ;;
-  v)
-   VERBOSE=1
-   ;;
-  h)
-   HELP=1
- esac
+  case $optname in
+    p)
+      PROGRAM=$OPTARG
+      ;;
+    n)
+      echo "requesting ${OPTARG} CPUs"
+      NCPU=$OPTARG
+      ;;
+    e)
+      EXECUTABLE=$OPTARG
+      ;;
+    d)
+      echo "dry run"
+      DRY_RUN=1
+      ;;
+    k)
+      KEEP_RUNSCRIPT=1
+      ;;
+    l)
+      MAKE_LOGS=1
+      ;;
+    m)
+      EMAIL=1
+      ;;
+    q)
+      QUEUE=${OPTARG}
+      ;;
+    s)
+      SEIDEMAN_NODE=1
+      ;;
+    v)
+      VERBOSE=1
+      ;;
+    h)
+      HELP=1
+  esac
 done
 
 if [ ${HELP} -eq 1 ]; then
- print_help
+print_help
 fi
 
 if [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
- if [ ! -z ${VERBOSE} ]; then
-  echo "host is radon"
- fi
- host=ra
+if [ ! -z ${VERBOSE} ]; then
+echo "host is radon"
+fi
+host=ra
 elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
- if [ ! -z ${VERBOSE} ]; then
-  echo "host is tim"
- fi
- host=tim
+if [ ! -z ${VERBOSE} ]; then
+echo "host is tim"
+fi
+host=tim
 elif [[ ${HOSTNAME} =~ quser* ]]; then
- host=quest
- if [ ! -z ${VERBOSE} ]; then
-  echo "host is quest"
- fi
+host=quest
+if [ ! -z ${VERBOSE} ]; then
+echo "host is quest"
+fi
 else
- if [ ! -z ${VERBOSE} ]; then
-  echo "host is $HOSTNAME"
- fi
- echo ""
- echo "ERROR: The host is not one of the recognized hosts."
- echo ""
- print_help
+if [ ! -z ${VERBOSE} ]; then
+echo "host is $HOSTNAME"
+fi
+echo ""
+echo "ERROR: The host is not one of the recognized hosts."
+echo ""
+print_help
 fi
 
 # at this point something will happen, so make the submission script
 if [ -f $hoagie ]; then
- rm -f $hoagie
+rm -f $hoagie
 fi
 touch $hoagie
 
 # decide what to run
 if [ ! -z ${VERBOSE} ]; then
- echo "program is '${PROGRAM}'"
+echo "program is '${PROGRAM}'"
 fi
 if [ -z ${PROGRAM} ]; then
- PROGRAM=dynamix
+PROGRAM=dynamix
 fi
 
 if [ ! -z ${VERBOSE} ]; then
- echo "running ${PROGRAM}_sub_${host}"
+echo "running ${PROGRAM}_sub_${host}"
 fi
 ${PROGRAM}_sub_${host}
