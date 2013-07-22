@@ -25,38 +25,20 @@ function print_help {
 
 # request a queue by name
 function set_queue {
-  if [[ ${HOSTNAME} =~ quser* ]]; then
-    if [ -z ${QUEUE} ]; then
-      # default to normal queue
-      echo "#MSUB -q normal" >> $hoagie
-    else
-      echo "#MSUB -q ${QUEUE}" >> $hoagie
+  if [ -z ${QUEUE} ]; then
+    if [[ ${HOSTNAME} =~ quser* ]]; then
+      # default to normal queue on quest
+      echo "#${MANAGER} -q normal" >> $hoagie
     fi
-  elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
-    if [ ! -z ${QUEUE} ]; then
-      echo "#PBS -q ${QUEUE}" >> $hoagie
-    fi
-  elif [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
-    if [ ! -z ${QUEUE} ]; then
-      echo "#$ -q ${QUEUE}" >> $hoagie
-    fi
+  else
+    echo "#${MANAGER} -q ${QUEUE}" >> $hoagie
   fi
 }
 
 # request a maximum walltime
 function set_walltime {
-  if [[ ${HOSTNAME} =~ quser* ]]; then
-    if [ ! -z ${WALLTIME} ]; then
-      echo "#MSUB -l walltime=${WALLTIME}" >> $hoagie
-    fi
-  elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
-    if [ ! -z ${WALLTIME} ]; then
-      echo "#PBS -l walltime=${WALLTIME}" >> $hoagie
-    fi
-  elif [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
-    if [ ! -z ${WALLTIME} ]; then
-      echo "#$ -l walltime=${WALLTIME}" >> $hoagie
-    fi
+  if [ ! -z ${WALLTIME} ]; then
+    echo "#${MANAGER} -l walltime=${WALLTIME}" >> $hoagie
   fi
 }
 
@@ -293,6 +275,9 @@ SEIDEMAN_NODE=false
 VERBOSE=false
 WALLTIME=""
 
+# default manager is empty
+MANAGER=""
+
 while getopts ":e:n:p:q:w:dhklmsv" optname; do
   case ${optname} in
     e)
@@ -350,13 +335,16 @@ if [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
     echo "host is radon"
   fi
   host=ra
+  MANAGER="$"
 elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
   if ${VERBOSE}; then
     echo "host is tim"
   fi
   host=tim
+  MANAGER="PBS"
 elif [[ ${HOSTNAME} =~ quser* ]]; then
   host=quest
+  MANAGER="MSUB"
   if ${VERBOSE}; then
     echo "host is quest"
   fi
