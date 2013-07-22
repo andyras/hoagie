@@ -24,7 +24,6 @@ function print_help {
 }
 
 # request a queue by name
-
 function set_queue {
   if [[ ${HOSTNAME} =~ quser* ]]; then
     if [ -z ${QUEUE} ]; then
@@ -40,6 +39,23 @@ function set_queue {
   elif [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
     if [ ! -z ${QUEUE} ]; then
       echo "#$ -q ${QUEUE}" >> $hoagie
+    fi
+  fi
+}
+
+# request a maximum walltime
+function set_walltime {
+  if [[ ${HOSTNAME} =~ quser* ]]; then
+    if [ ! -z ${WALLTIME} ]; then
+      echo "#MSUB -l walltime=${WALLTIME}" >> $hoagie
+    fi
+  elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
+    if [ ! -z ${WALLTIME} ]; then
+      echo "#PBS -l walltime=${WALLTIME}" >> $hoagie
+    fi
+  elif [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
+    if [ ! -z ${WALLTIME} ]; then
+      echo "#$ -l walltime=${WALLTIME}" >> $hoagie
     fi
   fi
 }
@@ -224,6 +240,7 @@ function dynamix_sub_ra {
   sge_set_log_files
   sge_request_cpus
   set_queue
+  set_walltime
   sge_create_scratch_dir
   sge_go_to_working_dir
   run_program "sleep 5; touch me"
@@ -238,6 +255,7 @@ function dynamix_sub_tim {
   pbs_set_log_files
   pbs_request_cpus
   set_queue
+  set_walltime
   pbs_go_to_working_dir
   run_program "sleep 5; touch me"
   #run_program "./total_dynamix"
@@ -250,6 +268,7 @@ function dynamix_sub_quest {
   moab_set_log_files
   moab_request_cpus
   set_queue
+  set_walltime
   if ${SEIDEMAN_NODE}; then
     moab_quest_seideman_node
   fi
@@ -257,11 +276,11 @@ function dynamix_sub_quest {
   run_program "sleep 5; touch me"
   #run_program "./total_dynamix"
   delete_runscript
-  msub_job
+  #msub_job
 }
 
 # define variables as empty
-HELP=0
+HELP=false
 PROGRAM=""
 NCPU=""
 EXECUTABLE=""
@@ -272,22 +291,32 @@ EMAIL=false
 QUEUE=""
 SEIDEMAN_NODE=false
 VERBOSE=false
+WALLTIME=""
 
-while getopts ":p:n:e:dklmshv" optname; do
+while getopts ":e:n:p:q:w:dhklmsv" optname; do
   case ${optname} in
-    p)
-      PROGRAM=${OPTARG}
+    e)
+      EXECUTABLE=${OPTARG}
       ;;
     n)
       echo "requesting ${OPTARG} CPUs"
       NCPU=${OPTARG}
       ;;
-    e)
-      EXECUTABLE=${OPTARG}
+    p)
+      PROGRAM=${OPTARG}
+      ;;
+    q)
+      QUEUE=${OPTARG}
+      ;;
+    w)
+      WALLTIME=${OPTARG}
       ;;
     d)
       echo "dry run"
       DRY_RUN=true
+      ;;
+    h)
+      HELP=true
       ;;
     k)
       KEEP_RUNSCRIPT=true
@@ -298,9 +327,6 @@ while getopts ":p:n:e:dklmshv" optname; do
     m)
       EMAIL=true
       ;;
-    q)
-      QUEUE=${OPTARG}
-      ;;
     s)
       SEIDEMAN_NODE=true
       QUEUE="buyin"
@@ -308,55 +334,57 @@ while getopts ":p:n:e:dklmshv" optname; do
     v)
       VERBOSE=true
       ;;
-    h)
-      HELP=1
   esac
 done
 
-if [ ${HELP} -eq 1 ]; then
+if ${VERBOSE}; then
+  echo "WALLTIME=${WALLTIME}"
+fi
+
+if ${HELP}; then
 print_help
 fi
 
 if [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
-if ${VERBOSE}; then
-echo "host is radon"
-fi
-host=ra
+  if ${VERBOSE}; then
+    echo "host is radon"
+  fi
+  host=ra
 elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
-if ${VERBOSE}; then
-echo "host is tim"
-fi
-host=tim
+  if ${VERBOSE}; then
+    echo "host is tim"
+  fi
+  host=tim
 elif [[ ${HOSTNAME} =~ quser* ]]; then
-host=quest
-if ${VERBOSE}; then
-echo "host is quest"
-fi
+  host=quest
+  if ${VERBOSE}; then
+    echo "host is quest"
+  fi
 else
-if ${VERBOSE}; then
-echo "host is $HOSTNAME"
-fi
-echo ""
-echo "ERROR: The host is not one of the recognized hosts."
-echo ""
-print_help
+  if ${VERBOSE}; then
+    echo "host is $HOSTNAME"
+  fi
+  echo ""
+  echo "ERROR: The host is not one of the recognized hosts."
+  echo ""
+  print_help
 fi
 
 # at this point something will happen, so make the submission script
 if [ -f $hoagie ]; then
-rm -f $hoagie
+  rm -f $hoagie
 fi
 touch $hoagie
 
 # decide what to run
 if ${VERBOSE}; then
-echo "program is '${PROGRAM}'"
+  echo "program is '${PROGRAM}'"
 fi
 if [ -z ${PROGRAM} ]; then
-PROGRAM=dynamix
+  PROGRAM=dynamix
 fi
 
 if ${VERBOSE}; then
-echo "running ${PROGRAM}_sub_${host}"
+  echo "running ${PROGRAM}_sub_${host}"
 fi
 ${PROGRAM}_sub_${host}
