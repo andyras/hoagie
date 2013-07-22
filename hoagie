@@ -26,12 +26,21 @@ function print_help {
 # request a queue by name
 
 function set_queue {
-  if [ ${HOSTNAME} =~ quser* ]; then
-    echo "#MSUB -q ${QUEUE}" >> $hoagie
+  if [[ ${HOSTNAME} =~ quser* ]]; then
+    if [ -z ${QUEUE} ]; then
+      # default to normal queue
+      echo "#MSUB -q normal" >> $hoagie
+    else
+      echo "#MSUB -q ${QUEUE}" >> $hoagie
+    fi
   elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
-    echo "#PBS -q ${QUEUE}" >> $hoagie
+    if [ ! -z ${QUEUE} ]; then
+      echo "#PBS -q ${QUEUE}" >> $hoagie
+    fi
   elif [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
-    echo "#$ -q ${QUEUE}" >> $hoagie
+    if [ ! -z ${QUEUE} ]; then
+      echo "#$ -q ${QUEUE}" >> $hoagie
+    fi
   fi
 }
 
@@ -39,7 +48,6 @@ function set_queue {
 function moab_quest_seideman_node {
   echo "#MSUB -l advres=b1010" >> $hoagie
   echo "#MSUB -A b1010" >> $hoagie
-  echo "#MSUB -q buyin" >> $hoagie
   echo "#MSUB -l walltime=INFINITY" >> $hoagie
 }
 
@@ -295,6 +303,7 @@ while getopts ":p:n:e:dklmshv" optname; do
       ;;
     s)
       SEIDEMAN_NODE=1
+      QUEUE="buyin"
       ;;
     v)
       VERBOSE=1
