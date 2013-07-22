@@ -1,7 +1,6 @@
 #!/bin/bash
 
 hoagie="${PWD}/hoagie.sh"
-HELP=0
 
 function print_help {
   echo "
@@ -237,17 +236,30 @@ function dynamix_sub_quest {
   msub_job
 }
 
+# define variables as empty
+HELP=0
+PROGRAM=""
+NCPU=""
+EXECUTABLE=""
+DRY_RUN=""
+KEEP_RUNSCRIPT=""
+MAKE_LOGS=""
+EMAIL=""
+QUEUE=""
+SEIDEMAN_NODE=""
+VERBOSE=""
+
 while getopts ":p:n:e:dklmshv" optname; do
-  case $optname in
+  case ${optname} in
     p)
-      PROGRAM=$OPTARG
+      PROGRAM=${OPTARG}
       ;;
     n)
       echo "requesting ${OPTARG} CPUs"
-      NCPU=$OPTARG
+      NCPU=${OPTARG}
       ;;
     e)
-      EXECUTABLE=$OPTARG
+      EXECUTABLE=${OPTARG}
       ;;
     d)
       echo "dry run"
