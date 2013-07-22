@@ -23,6 +23,18 @@ function print_help {
   exit
 }
 
+# request a queue by name
+
+function set_queue {
+  if [ ${HOSTNAME} =~ quser* ]; then
+    echo "#MSUB -q ${QUEUE}" >> $hoagie
+  elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
+    echo "#PBS -q ${QUEUE}" >> $hoagie
+  elif [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
+    echo "#$ -q ${QUEUE}" >> $hoagie
+  fi
+}
+
 # request Seideman node on quest
 function moab_quest_seideman_node {
   echo "#MSUB -l advres=b1010" >> $hoagie
@@ -203,6 +215,7 @@ function dynamix_sub_ra {
   set_sge_environment_vars
   sge_set_log_files
   sge_request_cpus
+  set_queue
   sge_create_scratch_dir
   sge_go_to_working_dir
   run_program "sleep 5; touch me"
@@ -216,6 +229,7 @@ function dynamix_sub_tim {
   set_pbs_environment_vars
   pbs_set_log_files
   pbs_request_cpus
+  set_queue
   pbs_go_to_working_dir
   run_program "sleep 5; touch me"
   #run_program "./total_dynamix"
@@ -227,6 +241,7 @@ function dynamix_sub_quest {
   set_moab_environment_vars
   moab_set_log_files
   moab_request_cpus
+  set_queue
   if [ ! -z ${SEIDEMAN_NODE} ]; then
     moab_quest_seideman_node
   fi
