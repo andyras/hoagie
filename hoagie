@@ -58,7 +58,7 @@ function set_sge_environment_vars {
   echo "#$ -cwd" >> $hoagie
   echo "#$ -V" >> $hoagie
   echo "#$ -N $(basename $0)_$(basename $(pwd))" >> $hoagie
-  if [ ! -z ${EMAIL} ]; then
+  if ${EMAIL}; then
     echo "#$ -m bae -M andyras@gmail.com" >> $hoagie
   fi
 }
@@ -69,7 +69,7 @@ function set_pbs_environment_vars {
   echo "#PBS -S /bin/bash" >> $hoagie
   echo "#PBS -V" >> $hoagie
   echo "#PBS -N $(basename $0)_$(basename $(pwd))" >> $hoagie
-  if [ ! -z ${EMAIL} ]; then
+  if ${EMAIL}; then
     echo "#PBS -m bae -M andyras@gmail.com" >> $hoagie
   fi
 }
@@ -80,14 +80,14 @@ function set_moab_environment_vars {
   echo "#MSUB -S /bin/bash" >> $hoagie
   echo "#MSUB -V" >> $hoagie
   echo "#MSUB -N $(basename $0)_$(basename $(pwd))" >> $hoagie
-  if [ ! -z ${EMAIL} ]; then
+  if ${EMAIL}; then
     echo "#MSUB -m bae -M andyras@gmail.com" >> $hoagie
   fi
 }
 
 # set up log files
 function pbs_set_log_files {
-  if [ ! -z ${MAKE_LOGS} ]; then
+  if ${MAKE_LOGS}; then
     echo "#PBS -o stdout.log" >> $hoagie
     echo "#PBS -e stderr.log" >> $hoagie
   else
@@ -98,7 +98,7 @@ function pbs_set_log_files {
 
 # set up log files
 function moab_set_log_files {
-  if [ ! -z ${MAKE_LOGS} ]; then
+  if ${MAKE_LOGS}; then
     echo "#MSUB -o stdout.log" >> $hoagie
     echo "#MSUB -e stderr.log" >> $hoagie
   else
@@ -109,7 +109,7 @@ function moab_set_log_files {
 
 # set up log files
 function sge_set_log_files {
-  if [ ! -z ${MAKE_LOGS} ]; then
+  if ${MAKE_LOGS}; then
     echo "#$ -o stdout.log" >> $hoagie
     echo "#$ -e stderr.log" >> $hoagie
   else
@@ -146,7 +146,7 @@ function sge_create_scratch_dir {
   echo "echo \"create scratch directory\"" >> $hoagie
   echo "SCRATCH_JOB_DIR=\${TMPDIR}/\$(basename \${SGE_CWD_PATH})" >> $hoagie
   echo "cp -rf \${SGE_CWD_PATH} \${SCRATCH_JOB_DIR}" >> $hoagie
-  if [ ! -z ${MAKE_LOGS} ]; then
+  if ${MAKE_LOGS}; then
     echo "rm -f \${SCRATCH_JOB_DIR}/std{err,out}.log" >> $hoagie
   fi
 }
@@ -191,7 +191,7 @@ function sge_copy_back_scratch {
 
 # delete the runscript
 function delete_runscript {
-  if [ ! -z ${KEEP_RUNSCRIPT} ]; then
+  if ${KEEP_RUNSCRIPT}; then
     :
   else
     echo "" >> $hoagie
@@ -203,7 +203,7 @@ function delete_runscript {
 
 # submit the job
 function qsub_job {
-  if [ ! -z ${DRY_RUN} ]; then
+  if ${DRY_RUN}; then
     :
   else
     qsub $hoagie
@@ -212,7 +212,7 @@ function qsub_job {
 
 # submit the job
 function msub_job {
-  if [ ! -z ${DRY_RUN} ]; then
+  if ${DRY_RUN}; then
     :
   else
     msub $hoagie
@@ -250,7 +250,7 @@ function dynamix_sub_quest {
   moab_set_log_files
   moab_request_cpus
   set_queue
-  if [ ! -z ${SEIDEMAN_NODE} ]; then
+  if ${SEIDEMAN_NODE}; then
     moab_quest_seideman_node
   fi
   pbs_go_to_working_dir
@@ -265,13 +265,13 @@ HELP=0
 PROGRAM=""
 NCPU=""
 EXECUTABLE=""
-DRY_RUN=""
-KEEP_RUNSCRIPT=""
-MAKE_LOGS=""
-EMAIL=""
+DRY_RUN=false
+KEEP_RUNSCRIPT=false
+MAKE_LOGS=false
+EMAIL=false
 QUEUE=""
-SEIDEMAN_NODE=""
-VERBOSE=""
+SEIDEMAN_NODE=false
+VERBOSE=false
 
 while getopts ":p:n:e:dklmshv" optname; do
   case ${optname} in
@@ -287,26 +287,26 @@ while getopts ":p:n:e:dklmshv" optname; do
       ;;
     d)
       echo "dry run"
-      DRY_RUN=1
+      DRY_RUN=true
       ;;
     k)
-      KEEP_RUNSCRIPT=1
+      KEEP_RUNSCRIPT=true
       ;;
     l)
-      MAKE_LOGS=1
+      MAKE_LOGS=true
       ;;
     m)
-      EMAIL=1
+      EMAIL=true
       ;;
     q)
       QUEUE=${OPTARG}
       ;;
     s)
-      SEIDEMAN_NODE=1
+      SEIDEMAN_NODE=true
       QUEUE="buyin"
       ;;
     v)
-      VERBOSE=1
+      VERBOSE=true
       ;;
     h)
       HELP=1
@@ -318,22 +318,22 @@ print_help
 fi
 
 if [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
-if [ ! -z ${VERBOSE} ]; then
+if ${VERBOSE}; then
 echo "host is radon"
 fi
 host=ra
 elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
-if [ ! -z ${VERBOSE} ]; then
+if ${VERBOSE}; then
 echo "host is tim"
 fi
 host=tim
 elif [[ ${HOSTNAME} =~ quser* ]]; then
 host=quest
-if [ ! -z ${VERBOSE} ]; then
+if ${VERBOSE}; then
 echo "host is quest"
 fi
 else
-if [ ! -z ${VERBOSE} ]; then
+if ${VERBOSE}; then
 echo "host is $HOSTNAME"
 fi
 echo ""
@@ -349,14 +349,14 @@ fi
 touch $hoagie
 
 # decide what to run
-if [ ! -z ${VERBOSE} ]; then
+if ${VERBOSE}; then
 echo "program is '${PROGRAM}'"
 fi
 if [ -z ${PROGRAM} ]; then
 PROGRAM=dynamix
 fi
 
-if [ ! -z ${VERBOSE} ]; then
+if ${VERBOSE}; then
 echo "running ${PROGRAM}_sub_${host}"
 fi
 ${PROGRAM}_sub_${host}
