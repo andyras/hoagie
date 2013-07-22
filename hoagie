@@ -43,97 +43,44 @@ function set_walltime {
 }
 
 # request Seideman node on quest
-function moab_quest_seideman_node {
+function quest_seideman_node {
   echo "#MSUB -l advres=b1010" >> $hoagie
   echo "#MSUB -A b1010" >> $hoagie
-  echo "#MSUB -l walltime=999:99:99:99" >> $hoagie
 }
 
 # set up SGE environment variables
-function set_sge_environment_vars {
+function set_environment_vars {
   echo "#!/bin/bash" >> $hoagie
-  echo "#$ -S /bin/bash" >> $hoagie
-  echo "#$ -cwd" >> $hoagie
-  echo "#$ -V" >> $hoagie
-  echo "#$ -N $(basename $0)_$(basename $(pwd))" >> $hoagie
-  if ${EMAIL}; then
-    echo "#$ -m bae -M andyras@gmail.com" >> $hoagie
+  echo "#${MANAGER} -S /bin/bash" >> $hoagie
+  if [ ${MANAGER} == "$" ]; then
+    echo "#${MANAGER} -cwd" >> $hoagie
   fi
-}
-
-# set up PBS environment variables
-function set_pbs_environment_vars {
-  echo "#!/bin/bash" >> $hoagie
-  echo "#PBS -S /bin/bash" >> $hoagie
-  echo "#PBS -V" >> $hoagie
-  echo "#PBS -N $(basename $0)_$(basename $(pwd))" >> $hoagie
+  echo "#${MANAGER} -V" >> $hoagie
+  echo "#${MANAGER} -N $(basename $0)_$(basename $(pwd))" >> $hoagie
   if ${EMAIL}; then
-    echo "#PBS -m bae -M andyras@gmail.com" >> $hoagie
-  fi
-}
-
-# set up moab environment variables
-function set_moab_environment_vars {
-  echo "#!/bin/bash" >> $hoagie
-  echo "#MSUB -S /bin/bash" >> $hoagie
-  echo "#MSUB -V" >> $hoagie
-  echo "#MSUB -N $(basename $0)_$(basename $(pwd))" >> $hoagie
-  if ${EMAIL}; then
-    echo "#MSUB -m bae -M andyras@gmail.com" >> $hoagie
+    echo "#${MANAGER} -m bae -M andyras@gmail.com" >> $hoagie
   fi
 }
 
 # set up log files
-function pbs_set_log_files {
+function set_log_files {
   if ${MAKE_LOGS}; then
-    echo "#PBS -o stdout.log" >> $hoagie
-    echo "#PBS -e stderr.log" >> $hoagie
+    echo "#${MANAGER} -o stdout.log" >> $hoagie
+    echo "#${MANAGER} -e stderr.log" >> $hoagie
   else
-    echo "#PBS -o /dev/null" >> $hoagie
-    echo "#PBS -e /dev/null" >> $hoagie
-  fi
-}
-
-# set up log files
-function moab_set_log_files {
-  if ${MAKE_LOGS}; then
-    echo "#MSUB -o stdout.log" >> $hoagie
-    echo "#MSUB -e stderr.log" >> $hoagie
-  else
-    echo "#MSUB -o /dev/null" >> $hoagie
-    echo "#MSUB -e /dev/null" >> $hoagie
-  fi
-}
-
-# set up log files
-function sge_set_log_files {
-  if ${MAKE_LOGS}; then
-    echo "#$ -o stdout.log" >> $hoagie
-    echo "#$ -e stderr.log" >> $hoagie
-  else
-    echo "#$ -o /dev/null" >> $hoagie
-    echo "#$ -e /dev/null" >> $hoagie
+    echo "#${MANAGER} -o /dev/null" >> $hoagie
+    echo "#${MANAGER} -e /dev/null" >> $hoagie
   fi
 }
 
 # request multiple CPUs
-function sge_request_cpus {
+function request_cpus {
   if [ ! -z ${NCPU} ]; then
-    echo "#$ -pe ortePE ${NCPU}" >> $hoagie
-  fi
-}
-
-# request multiple CPUs
-function pbs_request_cpus {
-  if [ ! -z ${NCPU} ]; then
-    echo "#PBS -l nodes=1:ppn=${NCPU}" >> $hoagie
-  fi
-}
-
-# request multiple CPUs
-function moab_request_cpus {
-  if [ ! -z ${NCPU} ]; then
-    echo "#MSUB -l nodes=1:ppn=${NCPU}" >> $hoagie
+    if [ ${MANAGER} == "$" ]; then
+      echo "#$ -pe ortePE ${NCPU}" >> $hoagie
+    else
+      echo "#${MANAGER} -l nodes=1:ppn=${NCPU}" >> $hoagie
+    fi
   fi
 }
 
@@ -218,9 +165,9 @@ function msub_job {
 }
 
 function dynamix_sub_ra {
-  set_sge_environment_vars
-  sge_set_log_files
-  sge_request_cpus
+  set_environment_vars
+  set_log_files
+  request_cpus
   set_queue
   set_walltime
   sge_create_scratch_dir
@@ -233,9 +180,9 @@ function dynamix_sub_ra {
 }
 
 function dynamix_sub_tim {
-  set_pbs_environment_vars
-  pbs_set_log_files
-  pbs_request_cpus
+  set_environment_vars
+  set_log_files
+  request_cpus
   set_queue
   set_walltime
   pbs_go_to_working_dir
@@ -246,13 +193,13 @@ function dynamix_sub_tim {
 }
 
 function dynamix_sub_quest {
-  set_moab_environment_vars
-  moab_set_log_files
-  moab_request_cpus
+  set_environment_vars
+  set_log_files
+  request_cpus
   set_queue
   set_walltime
   if ${SEIDEMAN_NODE}; then
-    moab_quest_seideman_node
+    quest_seideman_node
   fi
   pbs_go_to_working_dir
   run_program "sleep 5; touch me"
@@ -315,6 +262,7 @@ while getopts ":e:n:p:q:w:dhklmsv" optname; do
     s)
       SEIDEMAN_NODE=true
       QUEUE="buyin"
+      WALLTIME="999:99:99:99"
       ;;
     v)
       VERBOSE=true
