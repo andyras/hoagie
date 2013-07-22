@@ -6,7 +6,7 @@ function print_help {
   echo "
   hoagie is a script to submit jobs to clusters (so far tim, radon and quest).
   
-  Usage: hoagie -p PROGRAM -n NCPU -e COMMAND -d -k -l -m -s -h -v
+  Usage: hoagie -p PROGRAM -n NCPU -e COMMAND -d -k -l -m -q -s -h -v
   -p: specify program to be run
   -n: specify number of CPUs
   -e: specify executable or command to be run by job
@@ -14,6 +14,7 @@ function print_help {
   -k: keep auto-generated hoagie.sh after job is done
   -l: make log files for stderr and stdout
   -m: send e-mail at beginning, end, or abortion of job
+  -q: request a specific queue by name
   -s: request Seideman node (quest only)
   -h: print this help
   -v: verbose output
