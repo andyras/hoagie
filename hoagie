@@ -64,7 +64,7 @@ function set_walltime {
 function moab_quest_seideman_node {
   echo "#MSUB -l advres=b1010" >> $hoagie
   echo "#MSUB -A b1010" >> $hoagie
-  echo "#MSUB -l walltime=INFINITY" >> $hoagie
+  echo "#MSUB -l walltime=999:99:99:99" >> $hoagie
 }
 
 # set up SGE environment variables
@@ -276,7 +276,7 @@ function dynamix_sub_quest {
   run_program "sleep 5; touch me"
   #run_program "./total_dynamix"
   delete_runscript
-  #msub_job
+  msub_job
 }
 
 # define variables as empty
