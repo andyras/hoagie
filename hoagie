@@ -6,9 +6,9 @@ function print_help {
 echo "
 hoagie is a script to submit jobs to clusters (so far tim, radon and quest).
 
-Usage: hoagie -p PROGRAM -n NCPU -e COMMAND -d -k -l -m -q -s -h -v
+Usage: hoagie -p PROGRAM -n CPUSPEC -e COMMAND -d -k -l -m -q -s -h -v
 -p: specify program to be run
--n: specify number of CPUs
+-n: specify number of CPUs (-n NCPU) or nodes:CPUs per node (-n NNODES:NCPU)
 -e: specify executable or command to be run by job
 -d: dry run (don't submit job)
 -k: keep auto-generated hoagie.sh after job is done
@@ -84,14 +84,22 @@ else
 fi
 }
 
-# request multiple CPUs
+# specify CPU count
 function request_cpus {
-if [ ! -z ${NCPU} ]; then
-  if [ ${MANAGER} == "$" ]; then
-    echo "#$ -pe ortePE ${NCPU}" >> $hoagie
-  else
-    echo "#${MANAGER} -l nodes=1:ppn=${NCPU}" >> $hoagie
-  fi
+# parse number of nodes, CPUs
+if [[ $CPUSPEC == *:* ]]; then
+  NNODES=$(echo $CPUSPEC | sed 's/\(.*\):\(.*\)/\1/')
+  NCPU=$(echo $CPUSPEC | sed 's/\(.*\):\(.*\)/\2/')
+else
+  NNODES=1
+  NCPU=$CPUSPEC
+fi
+
+if [ ${MANAGER} == "$" ]; then
+  # TODO: this command does not handle number of nodes
+  echo "#$ -pe ortePE ${NCPU}" >> $hoagie
+else
+  echo "#${MANAGER} -l nodes=${NNODES}:ppn=${NCPU}" >> $hoagie
 fi
 }
 
@@ -129,6 +137,9 @@ echo "" >> $hoagie
 echo "# Run program" >> $hoagie
 echo "echo \"Running program\"" >> $hoagie
 echo 'echo ""' >> $hoagie
+echo "" >> $hoagie
+echo "export OMP_NUM_THREADS=${NCPU}" >> $hoagie
+echo "export MKL_NUM_THREADS=${NCPU}" >> $hoagie
 echo "" >> $hoagie
 if [ ! -z "${EXECUTABLE}" ]; then
   echo "${EXECUTABLE}" >> $hoagie
@@ -230,7 +241,8 @@ msub_job
 # define variables as empty
 HELP=false
 PROGRAM=""
-NCPU=""
+NNODES=1
+NCPU=1
 EXECUTABLE=""
 DRY_RUN=false
 KEEP_RUNSCRIPT=false
@@ -251,7 +263,7 @@ while getopts ":e:n:p:q:w:dhklmsv" optname; do
       ;;
     n)
       echo "requesting ${OPTARG} CPUs"
-      NCPU=${OPTARG}
+      CPUSPEC=${OPTARG}
       ;;
     p)
       PROGRAM=${OPTARG}
