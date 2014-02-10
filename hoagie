@@ -349,6 +349,7 @@ if [ -f $hoagie ]; then
   rm -f $hoagie
 fi
 touch $hoagie
+chmod 755 $hoagie
 
 # decide what to run
 if ${VERBOSE}; then
