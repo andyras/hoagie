@@ -87,7 +87,10 @@ fi
 # specify CPU count
 function request_cpus {
 # parse number of nodes, CPUs
-if [[ $CPUSPEC == *:* ]]; then
+if [ -z ${CPUSPEC} ]; then
+  NCPU=1
+  NNODES=1
+elif [[ $CPUSPEC == *:* ]]; then
   NNODES=$(echo $CPUSPEC | sed 's/\(.*\):\(.*\)/\1/')
   NCPU=$(echo $CPUSPEC | sed 's/\(.*\):\(.*\)/\2/')
 else
