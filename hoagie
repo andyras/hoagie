@@ -50,6 +50,7 @@ echo 'echo "# Job information"' >> $hoagie
 echo 'echo "HOSTNAME: $(hostname)"' >> $hoagie
 echo 'echo "DIRECTORY: $(pwd)"' >> $hoagie
 echo 'echo "JOB START TIME: $(date +"%F %T")"' >> $hoagie
+echo 'startTime=$(date +%s)' >> $hoagie
 echo 'echo ""' >> $hoagie
 }
 
@@ -153,6 +154,7 @@ fi
 echo "" >> $hoagie
 echo 'echo ""' >> $hoagie
 echo 'echo "JOB END TIME: $(date +"%F %T")"' >> $hoagie
+echo 'echo "JOB DURATION: $(($(date +%s) - ${startTime})) s"' >> $hoagie
 }
 
 # copy the job from scratch back to the original directory
