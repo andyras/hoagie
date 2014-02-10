@@ -45,6 +45,19 @@ fi
 # print debug info about job
 function print_debug {
 echo "" >> $hoagie
+echo "function onKill {" >> $hoagie
+echo "" >> $hoagie
+echo 'echo "DANGER!"' >> $hoagie
+echo 'echo "DANGER!"' >> $hoagie
+echo 'echo "Job terminated unexpectedly!"' >> $hoagie
+echo 'echo "JOB END TIME: $(date +"%F %T")"' >> $hoagie
+echo 'echo "JOB DURATION: $(($(date +%s) - ${startTime})) s"' >> $hoagie
+echo "cd \${OWD}" >> $hoagie
+echo "exit" >> $hoagie
+echo "}" >> $hoagie
+echo "" >> $hoagie
+echo "trap onKill 2 9 15" >> $hoagie
+echo "" >> $hoagie
 echo "# Print debug info about job" >> $hoagie
 echo 'echo "# Job information"' >> $hoagie
 echo 'echo "HOSTNAME: $(hostname)"' >> $hoagie
