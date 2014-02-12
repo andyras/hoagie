@@ -15,6 +15,7 @@ Usage: hoagie -p PROGRAM -n CPUSPEC -e COMMAND -d -k -l -m -q -s -h -v
 -l: make log files for stderr and stdout
 -m: send e-mail at beginning, end, or abortion of job
 -q: request a specific queue by name
+-r: request a specific amount of memory. Format: -r <MEMREQ>[mb|G]
 -s: request Seideman node (quest only)
 -h: print this help
 -v: verbose output
@@ -46,7 +47,6 @@ fi
 function print_debug {
 echo "" >> $hoagie
 echo "function onKill {" >> $hoagie
-echo "" >> $hoagie
 echo 'echo "DANGER!"' >> $hoagie
 echo 'echo "DANGER!"' >> $hoagie
 echo 'echo "Job terminated unexpectedly!"' >> $hoagie
@@ -118,6 +118,33 @@ if [ ${MANAGER} == "$" ]; then
 else
   echo "#${MANAGER} -l nodes=${NNODES}:ppn=${NCPU}" >> $hoagie
 fi
+}
+
+# specify memory limits
+function request_memory {
+# determine memory per node based on where this is running
+if $AUTOMEM; then
+  if [ $host == "ra" ]; then
+    NODEMEM=16000
+    MEMUNIT=M
+    NODECPU=8
+  elif [ $host == "quest" ]; then
+    NODEMEM=48388
+    MEMUNIT=mb
+    NODECPU=12
+  elif [ $host == "tim" ]; then
+    NODEMEM=64402
+    MEMUNIT=mb
+    NODECPU=12
+  else
+    echo "WARNING: unknown host.  Not specifying memory request."
+    return
+  fi
+  # set memory limit
+  MEMREQ=$(awk "BEGIN {printf \"%d\\n\", ${NODEMEM}/${NODECPU}*${NNODES}*${NCPU}}")${MEMUNIT}
+fi
+
+echo "#${MANAGER} -l mem=${MEMREQ}" >> $hoagie
 }
 
 # create scratch directory
@@ -215,6 +242,7 @@ function dynamix_sub_ra {
 set_environment_vars
 set_log_files
 request_cpus
+request_memory
 set_queue
 set_walltime
 print_debug
@@ -231,6 +259,7 @@ function dynamix_sub_tim {
 set_environment_vars
 set_log_files
 request_cpus
+request_memory
 set_queue
 set_walltime
 print_debug
@@ -245,6 +274,7 @@ function dynamix_sub_quest {
 set_environment_vars
 set_log_files
 request_cpus
+request_memory
 set_queue
 set_walltime
 print_debug
@@ -263,6 +293,7 @@ HELP=false
 PROGRAM=""
 NNODES=1
 NCPU=1
+AUTOMEM=true
 EXECUTABLE=""
 DRY_RUN=false
 KEEP_RUNSCRIPT=false
@@ -276,7 +307,7 @@ WALLTIME=""
 # default manager is empty
 MANAGER=""
 
-while getopts ":e:n:p:q:w:dhklmsv" optname; do
+while getopts ":e:n:p:q:r:w:dhklmsv" optname; do
   case ${optname} in
     e)
       EXECUTABLE=${OPTARG}
@@ -309,6 +340,10 @@ while getopts ":e:n:p:q:w:dhklmsv" optname; do
       ;;
     m)
       EMAIL=true
+      ;;
+    r)
+      AUTOMEM=false
+      MEMREQ=${OPTARG}
       ;;
     s)
       SEIDEMAN_NODE=true
