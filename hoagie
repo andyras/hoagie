@@ -256,7 +256,6 @@ qsub_job
 }
 
 function dynamix_sub_tim {
-echo NODE IS ${SEIDEMAN_NODE}
 set_environment_vars
 set_log_files
 request_cpus
