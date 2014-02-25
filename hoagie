@@ -144,7 +144,11 @@ if $AUTOMEM; then
   MEMREQ=$(awk "BEGIN {printf \"%d\\n\", ${NODEMEM}/${NODECPU}*${NNODES}*${NCPU}}")${MEMUNIT}
 fi
 
-echo "#${MANAGER} -l mem=${MEMREQ}" >> $hoagie
+if [ $host == "ra" ]; then
+  echo "#${MANAGER} -l mem_free=${MEMREQ}" >> $hoagie
+else
+  echo "#${MANAGER} -l mem=${MEMREQ}" >> $hoagie
+fi
 }
 
 # create scratch directory
