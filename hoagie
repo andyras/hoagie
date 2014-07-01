@@ -374,7 +374,7 @@ if [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
   fi
   host=ra
   MANAGER="$"
-elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
+elif [ ${HOSTNAME} == "tim.hex.research.northwestern.edu" ]; then
   if ${VERBOSE}; then
     echo "host is tim"
   fi
