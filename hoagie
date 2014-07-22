@@ -122,6 +122,9 @@ fi
 
 # specify memory limits
 function request_memory {
+echo whoo >> /dev/null
+}
+function dummy {
 # determine memory per node based on where this is running
 if $AUTOMEM; then
   if [ $host == "ra" ]; then
