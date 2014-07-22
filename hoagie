@@ -52,7 +52,11 @@ echo 'echo "DANGER!"' >> $hoagie
 echo 'echo "Job terminated unexpectedly!"' >> $hoagie
 echo 'echo "JOB END TIME: $(date +"%F %T")"' >> $hoagie
 echo 'echo "JOB DURATION: $(($(date +%s) - ${startTime})) s"' >> $hoagie
+if [ $MANAGER == "$" ]; then
+echo "cd \${SGE_CWD_PATH}" >> $hoagie
+else
 echo "cd \${OWD}" >> $hoagie
+fi
 echo "exit" >> $hoagie
 echo "}" >> $hoagie
 echo "" >> $hoagie
@@ -377,7 +381,7 @@ if [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
   fi
   host=ra
   MANAGER="$"
-elif [ ${HOSTNAME} == "tim.selfip.org" ]; then
+elif [ ${HOSTNAME} == "tim.hex.research.northwestern.edu" ]; then
   if ${VERBOSE}; then
     echo "host is tim"
   fi
