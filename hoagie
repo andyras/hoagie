@@ -118,7 +118,7 @@ fi
 
 if [ ${MANAGER} == "$" ]; then
   # TODO: this command does not handle number of nodes
-  echo "#$ -pe ortePE ${NCPU}" >> $hoagie
+  echo "#$ -pe orte ${NCPU}" >> $hoagie
 else
   echo "#${MANAGER} -l nodes=${NNODES}:ppn=${NCPU}" >> $hoagie
 fi
