@@ -172,7 +172,7 @@ function pbs_go_to_working_dir {
 echo "" >> $hoagie
 echo "# Go to PBS working directory" >> $hoagie
 echo "echo \"Going to PBS working directory: \${PBS_O_WORKDIR}\"" >> $hoagie
-echo "OWD=$(pwd)" >> $hoagie
+echo "OWD=\$(pwd)" >> $hoagie
 echo "cd \${PBS_O_WORKDIR}" >> $hoagie
 }
 
