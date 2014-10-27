@@ -381,7 +381,7 @@ if [ ${HOSTNAME} == "radon.theory.northwestern.edu" ]; then
   fi
   host=ra
   MANAGER="$"
-if [ ${HOSTNAME} == "tin.theory.northwestern.edu" ]; then
+elif [ ${HOSTNAME} == "tin.theory.northwestern.edu" ]; then
   if ${VERBOSE}; then
     echo "host is tin"
   fi
