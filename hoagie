@@ -88,7 +88,7 @@ fi
 echo "#${MANAGER} -V" >> $hoagie
 echo "#${MANAGER} -N $(basename $0)_$(basename $(pwd))" >> $hoagie
 if ${EMAIL}; then
-  echo "#${MANAGER} -m bae -M tarp290phone@gmail.com" >> $hoagie
+  echo "#${MANAGER} -m bae -M ${EMAIL_ADDRESS}" >> $hoagie
 fi
 }
 
@@ -309,6 +309,7 @@ KEEP_RUNSCRIPT=false
 MAKE_LOGS=false
 LOG_NAME=""
 EMAIL=false
+EMAIL_ADDRESS=""
 QUEUE=""
 SEIDEMAN_NODE=false
 VERBOSE=false
@@ -317,7 +318,7 @@ WALLTIME=""
 # default manager is empty
 MANAGER=""
 
-while getopts ":e:n:p:q:r:w:l:Ldhkmsv" optname; do
+while getopts ":e:n:p:q:r:w:l:m:MLdhksv" optname; do
   case ${optname} in
     e)
       EXECUTABLE=${OPTARG}
@@ -355,6 +356,11 @@ while getopts ":e:n:p:q:r:w:l:Ldhkmsv" optname; do
       ;;
     m)
       EMAIL=true
+      EMAIL_ADDRESS=${OPTARG}
+      ;;
+    M)
+      EMAIL=true
+      EMAIL_ADDRESS="tarp290phone@gmail.com"
       ;;
     r)
       AUTOMEM=false
