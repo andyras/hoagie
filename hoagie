@@ -12,7 +12,8 @@ Usage: hoagie -p PROGRAM -n CPUSPEC -e COMMAND -d -k -l -m -q -s -h -v
 -e: specify executable or command to be run by job
 -d: dry run (don't submit job)
 -k: keep auto-generated hoagie.sh after job is done
--l: make log files for stderr and stdout
+-L: make log files for stderr and stdout
+-l: make log files for stderr and stdout with a given base name
 -m: send e-mail at beginning, end, or abortion of job
 -q: request a specific queue by name
 -r: request a specific amount of memory. Format: -r <MEMREQ>[mb|G]
@@ -87,15 +88,15 @@ fi
 echo "#${MANAGER} -V" >> $hoagie
 echo "#${MANAGER} -N $(basename $0)_$(basename $(pwd))" >> $hoagie
 if ${EMAIL}; then
-  echo "#${MANAGER} -m bae -M andyras@gmail.com" >> $hoagie
+  echo "#${MANAGER} -m bae -M tarp290phone@gmail.com" >> $hoagie
 fi
 }
 
 # set up log files
 function set_log_files {
 if ${MAKE_LOGS}; then
-  echo "#${MANAGER} -o stdout.log" >> $hoagie
-  echo "#${MANAGER} -e stderr.log" >> $hoagie
+  echo "#${MANAGER} -o ${LOG_NAME}_out.log" >> $hoagie
+  echo "#${MANAGER} -e ${LOG_NAME}_err.log" >> $hoagie
 else
   echo "#${MANAGER} -o /dev/null" >> $hoagie
   echo "#${MANAGER} -e /dev/null" >> $hoagie
@@ -118,7 +119,7 @@ fi
 
 if [ ${MANAGER} == "$" ]; then
   # TODO: this command does not handle number of nodes
-  echo "#$ -pe orte ${NCPU}" >> $hoagie
+  echo "#$ -pe ortePE ${NCPU}" >> $hoagie
 else
   echo "#${MANAGER} -l nodes=${NNODES}:ppn=${NCPU}" >> $hoagie
 fi
@@ -166,7 +167,7 @@ echo "echo \"create scratch directory\"" >> $hoagie
 echo "SCRATCH_JOB_DIR=\${TMPDIR}/\$(basename \${SGE_CWD_PATH})" >> $hoagie
 echo "cp -rf \${SGE_CWD_PATH} \${SCRATCH_JOB_DIR}" >> $hoagie
 if ${MAKE_LOGS}; then
-  echo "rm -f \${SCRATCH_JOB_DIR}/std{err,out}.log" >> $hoagie
+  echo "rm -f \${SCRATCH_JOB_DIR}/${LOG_NAME}_{err,out}.log" >> $hoagie
 fi
 }
 
@@ -259,8 +260,7 @@ set_walltime
 print_debug
 sge_create_scratch_dir
 sge_go_to_working_dir
-run_program "sleep 5; touch me"
-#run_program "./total_dynamix"
+run_program "./total_dynamix"
 sge_copy_back_scratch
 delete_runscript
 qsub_job
@@ -275,8 +275,7 @@ set_queue
 set_walltime
 print_debug
 pbs_go_to_working_dir
-run_program "sleep 5; touch me"
-#run_program "./total_dynamix"
+run_program "./total_dynamix"
 delete_runscript
 qsub_job
 }
@@ -293,8 +292,7 @@ fi
 set_walltime
 print_debug
 pbs_go_to_working_dir
-run_program "sleep 5; touch me"
-#run_program "./total_dynamix"
+run_program "./total_dynamix"
 delete_runscript
 msub_job
 }
@@ -309,6 +307,7 @@ EXECUTABLE=""
 DRY_RUN=false
 KEEP_RUNSCRIPT=false
 MAKE_LOGS=false
+LOG_NAME=""
 EMAIL=false
 QUEUE=""
 SEIDEMAN_NODE=false
@@ -318,7 +317,7 @@ WALLTIME=""
 # default manager is empty
 MANAGER=""
 
-while getopts ":e:n:p:q:r:w:dhklmsv" optname; do
+while getopts ":e:n:p:q:r:w:l:Ldhkmsv" optname; do
   case ${optname} in
     e)
       EXECUTABLE=${OPTARG}
@@ -348,6 +347,11 @@ while getopts ":e:n:p:q:r:w:dhklmsv" optname; do
       ;;
     l)
       MAKE_LOGS=true
+      LOG_NAME=${OPTARG}
+      ;;
+    L)
+      MAKE_LOGS=true
+      LOG_NAME="std"
       ;;
     m)
       EMAIL=true
@@ -366,7 +370,6 @@ while getopts ":e:n:p:q:r:w:dhklmsv" optname; do
       ;;
   esac
 done
-
 if ${VERBOSE}; then
   echo "WALLTIME=${WALLTIME}"
 fi
