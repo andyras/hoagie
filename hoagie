@@ -360,7 +360,12 @@ while getopts ":e:n:p:q:r:w:l:m:MLdhksv" optname; do
       ;;
     M)
       EMAIL=true
-      EMAIL_ADDRESS="tarp290phone@gmail.com"
+      if [ -f ~/.forward ]; then
+	EMAIL_ADDRESS=$(cat ~/.forward)
+      else
+	echo "Error: default e-mail address should be stored in ~/.forward"
+	exit
+      fi
       ;;
     r)
       AUTOMEM=false
@@ -376,6 +381,7 @@ while getopts ":e:n:p:q:r:w:l:m:MLdhksv" optname; do
       ;;
   esac
 done
+
 if ${VERBOSE}; then
   echo "WALLTIME=${WALLTIME}"
 fi
