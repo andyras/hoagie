@@ -6,7 +6,7 @@ function print_help {
 echo "
 hoagie is a script to submit jobs to clusters (so far tim, radon and quest).
 
-Usage: hoagie -p PROGRAM -n CPUSPEC -e COMMAND -d -k -l -m -q -s -h -v
+Usage: hoagie -p PROGRAM -n CPUSPEC -e COMMAND -d -k -l -L -m -M -q -s -h -v
 -p: specify program to be run
 -n: specify number of CPUs (-n NCPU) or nodes:CPUs per node (-n NNODES:NCPU)
 -e: specify executable or command to be run by job
@@ -14,7 +14,8 @@ Usage: hoagie -p PROGRAM -n CPUSPEC -e COMMAND -d -k -l -m -q -s -h -v
 -k: keep auto-generated hoagie.sh after job is done
 -L: make log files for stderr and stdout
 -l: make log files for stderr and stdout with a given base name
--m: send e-mail at beginning, end, or abortion of job
+-m: send e-mail at beginning, end, or abortion of job (specify e-mail address)
+-M: send e-mail at beginning, end, or abortion of job (e-mail address in ~/.forward)
 -q: request a specific queue by name
 -r: request a specific amount of memory. Format: -r <MEMREQ>[mb|G]
 -s: request Seideman node (quest only)
