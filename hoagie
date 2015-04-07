@@ -96,8 +96,8 @@ fi
 # set up log files
 function set_log_files {
 if ${MAKE_LOGS}; then
-  echo "#${MANAGER} -o ${LOG_NAME}_out.log" >> $hoagie
-  echo "#${MANAGER} -e ${LOG_NAME}_err.log" >> $hoagie
+  echo "#${MANAGER} -o ${LOG_NAME}out.log" >> $hoagie
+  echo "#${MANAGER} -e ${LOG_NAME}err.log" >> $hoagie
 else
   echo "#${MANAGER} -o /dev/null" >> $hoagie
   echo "#${MANAGER} -e /dev/null" >> $hoagie
@@ -168,7 +168,7 @@ echo "echo \"create scratch directory\"" >> $hoagie
 echo "SCRATCH_JOB_DIR=\${TMPDIR}/\$(basename \${SGE_CWD_PATH})" >> $hoagie
 echo "cp -rf \${SGE_CWD_PATH} \${SCRATCH_JOB_DIR}" >> $hoagie
 if ${MAKE_LOGS}; then
-  echo "rm -f \${SCRATCH_JOB_DIR}/${LOG_NAME}_{err,out}.log" >> $hoagie
+  echo "rm -f \${SCRATCH_JOB_DIR}/${LOG_NAME}{err,out}.log" >> $hoagie
 fi
 }
 
@@ -349,7 +349,7 @@ while getopts ":e:n:p:q:r:w:l:m:MLdhksv" optname; do
       ;;
     l)
       MAKE_LOGS=true
-      LOG_NAME=${OPTARG}
+      LOG_NAME=${OPTARG}_
       ;;
     L)
       MAKE_LOGS=true
